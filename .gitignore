@@ -59,3 +59,4 @@ Thumbs.db
 *.local
 temp/
 tmp/
+lab4/constants.py
