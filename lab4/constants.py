@@ -26,7 +26,6 @@ HEADLINE_URLS: Final[List[str]] = [
     "https://news.ycombinator.com/",
     "https://habr.com/ru/",
 ]
-OPENWEATHER_API_KEY: Final[str] = "7be346fb6d6bc09104d5fa3ddcbb69e2"
 
 OPENWEATHER_URL: Final[str] = "https://api.openweathermap.org/data/2.5/weather"
 
