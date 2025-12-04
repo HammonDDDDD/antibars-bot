@@ -1,0 +1,39 @@
+# Файлы Python кода
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local env files
+.env
+.env.local
+
+# SQLite (если локально работаешь)
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+
+# Другие
+.git/
+.gitignore
+README.md
+*.md

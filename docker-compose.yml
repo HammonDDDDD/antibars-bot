@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  antibars-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: antibars-bot
+    
+    # Перезапуск контейнера при сбое
+    restart: unless-stopped
+    
+    # Переменные окружения
+    environment:
+      # Telegram Token (задай в .env)
+      - BOT_TOKEN=${BOT_TOKEN}
+      # Google Sheets API (путь к credentials)
+      - GOOGLE_CREDENTIALS=/app/data/antibars-credentials.json
+      # Python настройки
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    
+    # Объёмы для персистентного хранилища
+    volumes:
+      # БД и кредентшалы
+      - ./data:/app/data
+      # Логи
+      - ./logs:/app/logs
+      # Кредентшалы Google Sheets (копируй сюда перед деплоем)
+      - ./antibars-credentials.json:/app/data/antibars-credentials.json:ro
+    
+    # Лимиты ресурсов (опционально)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Логирование
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Переменные окружения для сети (опционально)
+    networks:
+      - antibars-network
+
+networks:
+  antibars-network:
+    driver: bridge
+
+# Опционально: добавь volume для backup БД
+volumes:
+  bot-data:
+    driver: local
