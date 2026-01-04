@@ -16,7 +16,21 @@ previous_state: PreviousState = {}
 
 async def send_message(session: aiohttp.ClientSession,
                        chat_id: int, text: str) -> bool:
-    """ Асинхронно отправляет сообщение в чат """
+    """
+    Асинхронно отправляет сообщение в Telegram чат.
+    
+    Отправляет текстовое сообщение в указанный чат через Telegram Bot API.
+    Метод обрабатывает различные сценарии ошибок, включая сетевые проблемы
+    и ошибки API, обеспечивая надежную доставку уведомлений.
+    
+    Args:
+        session (aiohttp.ClientSession): Асинхронная HTTP-сессия для выполнения запроса
+        chat_id (int): Идентификатор чата, в который отправляется сообщение
+        text (str): Текст сообщения для отправки
+    
+    Returns:
+        bool: True если сообщение успешно отправлено, False в случае ошибки
+    """
     url: str = build_api_url("sendMessage")
     payload: Dict[str, Any] = {"chat_id": chat_id, "text": text}
 
@@ -46,7 +60,26 @@ async def send_message(session: aiohttp.ClientSession,
 async def get_updates(session: aiohttp.ClientSession,
                       offset: Optional[int] = None,
                       timeout: int = POLLING_TIMEOUT) -> Dict[str, Any]:
-    """ Асинхронно получает обновления от Telegram Bot API """
+    """
+    Асинхронно получает обновления от Telegram Bot API для обработки входящих сообщений и событий.
+    
+    Args:
+        session (aiohttp.ClientSession): HTTP-сессия для выполнения запроса.
+        offset (Optional[int]): Идентификатор первого обновления для получения. 
+            Если указан, возвращаются только обновления с более высоким ID.
+        timeout (int): Таймаут длинного опроса в секундах. По умолчанию POLLING_TIMEOUT.
+    
+    Returns:
+        Dict[str, Any]: Ответ API в формате JSON с ключами:
+            - ok (bool): Статус выполнения запроса
+            - result (list): Список полученных обновлений
+    
+    Why:
+    Метод реализует механизм длинного опроса для получения новых сообщений и событий от Telegram,
+    что позволяет боту реагировать на пользовательские запросы в реальном времени. Обработка смещения (offset)
+    обеспечает получение только новых обновлений, избегая дублирования. Таймаут и обработка ошибок гарантируют
+    стабильную работу при сетевых сбоях или временной недоступности API.
+    """
     url: str = build_api_url("getUpdates")
     params: Dict[str, Any] = {"timeout": timeout}
 
@@ -76,7 +109,26 @@ async def get_updates(session: aiohttp.ClientSession,
 
 
 async def main() -> None:
-    """ Главный цикл асинхронного эхобота """
+    """
+    Main event loop for an asynchronous Telegram echo bot that handles multiple command types and background monitoring.
+    
+    The bot continuously polls for Telegram updates and processes incoming messages to provide various services
+    including weather information, daily quotes, news headlines, and subscription management. It also runs a background
+    task for monitoring external data sources and sending notifications.
+    
+    Args:
+        None
+    
+    Returns:
+        None
+    
+    Why:
+    The method implements the core message processing logic to handle user interactions and maintain real-time
+    communication with Telegram users. It processes different command types to provide requested information
+    services while simultaneously running background monitoring tasks to deliver proactive notifications.
+    The asynchronous design allows concurrent handling of message processing and background monitoring
+    for efficient resource utilization and responsive user experience.
+    """
     offset: Optional[int] = None
     print("Async echo bot started")
 
@@ -163,7 +215,21 @@ async def main() -> None:
 
 async def _fetch_title(session: aiohttp.ClientSession,
                        url: str) -> str:
-    """ Загружает страницу, возвращает её title """
+    """
+    Extracts and returns the title text from a webpage's HTML content.
+    
+    Args:
+        session (aiohttp.ClientSession): The HTTP client session used to make the request.
+        url (str): The URL of the webpage to fetch the title from.
+    
+    Returns:
+        str: A formatted string containing either:
+            - The URL followed by the extracted title text if successful
+            - An error message indicating HTTP status code, request failure, or missing title
+    
+    The method performs HTTP request to retrieve webpage content and parses the HTML
+    to extract title information for further processing or display purposes.
+    """
     try:
         timeout = aiohttp.ClientTimeout(total=REQUEST_TIMEOUT)
         async with session.get(url, timeout=timeout) as response:
@@ -186,7 +252,17 @@ async def _fetch_title(session: aiohttp.ClientSession,
 
 
 async def get_headlines(session: aiohttp.ClientSession) -> str:
-    """ Получает несколько заголовков с разных сайтов конкурентно """
+    """
+    Fetches multiple website titles concurrently using asynchronous HTTP requests.
+    
+    Args:
+        session (aiohttp.ClientSession): The HTTP client session used for making requests.
+    
+    Returns:
+        str: A formatted string containing all retrieved headlines, each on a new line with bullet points.
+    
+    Why: This method performs concurrent HTTP requests to improve efficiency when fetching data from multiple sources simultaneously, reducing overall waiting time compared to sequential requests.
+    """
     tasks = [_fetch_title(session, url) for url in HEADLINE_URLS]
     # gather запускает все корутины одновременно и ждёт завершения всех
     results: List[str] = await asyncio.gather(*tasks)
@@ -196,7 +272,19 @@ async def get_headlines(session: aiohttp.ClientSession) -> str:
 
 async def get_weather_for_city(session: aiohttp.ClientSession,
                                city: str) -> str:
-    """ Асинхронно получает погоду для города через OpenWeatherMap """
+    """
+    Asynchronously fetches weather data for a specified city using the OpenWeatherMap API.
+    
+    Args:
+        session (aiohttp.ClientSession): The aiohttp client session for making HTTP requests.
+        city (str): The name of the city to get weather data for.
+    
+    Returns:
+        str: A formatted string containing weather information including temperature, feels-like temperature, and weather description in Russian. Returns an error message if the request fails or city is not found.
+    
+    Why:
+    This method provides real-time weather updates to support notification services that require current environmental data for user interactions.
+    """
     params = {
         "q": city, "appid": OPENWEATHER_API_KEY,
         "units": "metric", "lang": "ru",

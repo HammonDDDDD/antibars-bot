@@ -10,16 +10,38 @@ from lab4.constants import (
 
 
 def build_api_url(method_name: str) -> str:
-    """ Строит URL для запроса к API Telegram
-    :param method_name: название метода API (getMe, sendMessage)
-    :returns: готовый URL для запроса
+    """
+    Builds a complete API URL for making Telegram Bot API requests.
+    
+    This method constructs the full endpoint URL by combining the base API URL, 
+    bot token, and specific method name to form a valid Telegram Bot API call.
+    
+    Args:
+        method_name: Name of the Telegram Bot API method (e.g., 'getMe', 'sendMessage')
+    
+    Returns:
+        str: Complete URL string ready for HTTP requests to the Telegram API
     """
     return f"{API_BASE_URL}{BOT_TOKEN}/{method_name}"
 
 
 def check_token() -> None:
-    """ Проверка корректности токена, вывод информации о боте в консоль
-    :raises: requests.exceptions.RequestException при ошибке запроса
+    """
+    Validates the bot's authentication token by testing API connectivity and displays bot information.
+    
+    This method performs a health check of the bot's API connection by making a test request
+    to verify the token is valid and retrieve basic bot details. It ensures the bot is properly
+    configured before proceeding with other operations.
+    
+    Args:
+        None
+    
+    Returns:
+        None
+    
+    Raises:
+        requests.exceptions.RequestException: If the API request fails due to network issues
+            or invalid response.
     """
     url: str = build_api_url("getMe")
     try:
@@ -41,12 +63,21 @@ def check_token() -> None:
 
 
 def send_message(chat_id: int, text: str) -> bool:
-    """ Отправить сообщение в чат по id chat_id
-    Отправляет POST-запрос к методу send_message с текстом
-    :param chat_id: ID чата для отправки сообщения
-    :param text: текст сообщения
-    :returns: True если удача, False если фэйл
-    :raises: requests.exceptions.RequestException при ошибке запроса
+    """
+    Send a message to a Telegram chat by chat_id.
+    
+    This method sends a POST request to the Telegram Bot API's sendMessage endpoint 
+    to deliver text messages to specified chat recipients.
+    
+    Args:
+        chat_id: Unique identifier for the target chat
+        text: Content of the message to be sent
+    
+    Returns:
+        bool: True if message was successfully delivered, False if delivery failed
+    
+    Raises:
+        requests.exceptions.RequestException: If network request encounters an error
     """
     url: str = build_api_url("sendMessage")
     payload: Dict[str, Any] = {"chat_id": chat_id, "text": text}
@@ -70,13 +101,24 @@ def send_message(chat_id: int, text: str) -> bool:
 
 def get_updates(offset: Optional[int] = None,
                 timeout: int = POLLING_TIMEOUT) -> Dict[str, Any]:
-    """ Получить обновления от TG Bot API
-    Использует метод getUpdates для получения новых сообщений
-    Если offset не указан, получает все сообщения
-    :param offset: последнее полученное update_id + 1, если None то все
-    :param timeout: время ожидания ответа
-    :returns: словарь с результатом запроса - список обновлений
-    :raises: requests.exceptions.RequestException при ошибке запроса
+    """
+    Fetch updates from the Telegram Bot API.
+    
+    This method retrieves new messages and events from Telegram using long polling.
+    It implements the getUpdates method to receive updates with optional offset
+    for handling previously processed messages.
+    
+    Args:
+        offset: The update_id to start fetching from (last processed update_id + 1).
+            If None, retrieves all available updates.
+        timeout: Maximum time to wait for new updates in seconds.
+    
+    Returns:
+        Dictionary containing API response with list of updates under 'result' key.
+        Returns {'ok': False, 'result': []} on request failure.
+    
+    Raises:
+        requests.exceptions.RequestException: If the HTTP request fails.
     """
     url: str = build_api_url("getUpdates")
     params: Dict[str, Any] = {"timeout": timeout}
@@ -96,9 +138,18 @@ def get_updates(offset: Optional[int] = None,
 
 
 def _extract_message_data(update: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """ Извлекает данные из сообщения
-    :param update: словарь с данными обновления от API
-    :returns: словарь с chat_id и text если сообщение, иначе None
+    """
+    Extracts message data from a Telegram update payload.
+    
+    This method processes incoming Telegram API updates to identify valid text messages
+    and extract essential components needed for bot response handling.
+    
+    Args:
+        update: A dictionary containing the Telegram API update payload.
+    
+    Returns:
+        A dictionary with 'chat_id' and 'text' keys if the update contains a valid message,
+        otherwise None.
     """
     message = update.get("message")
     if message is None:
@@ -114,7 +165,19 @@ def _extract_message_data(update: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
 
 def run_echo_bot() -> None:
-    """ Запускает эхо-бота """
+    """
+    Starts an echo bot that listens for incoming messages and responds accordingly.
+    
+    The bot continuously polls for new messages and handles two types of responses:
+    - For the '/quote' command, it fetches and sends a daily quote
+    - For all other messages, it echoes back the received text
+    
+    Args:
+        None
+    
+    Returns:
+        None
+    """
     offset: Optional[int] = None
     print("Echo bot started!")
 
@@ -153,7 +216,20 @@ def run_echo_bot() -> None:
 
 
 def get_daily_quote() -> str:
-    """ Получает цитату дня с сайта quotes.toscrape.com"""
+    """
+    Fetches the daily quote from quotes.toscrape.com.
+    
+    This method retrieves inspirational content to provide users with engaging and thought-provoking messages as part of the bot's information services.
+    
+    Args:
+        None
+    
+    Returns:
+        str: The formatted quote text with author name, or an error message if the request fails.
+        
+    Raises:
+        None - exceptions are handled internally and returned as error messages.
+    """
     try:
         response = requests.get(QUOTES_URL, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()

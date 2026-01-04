@@ -25,7 +25,20 @@ async def poll_bars_and_notify(
         send_func,
         state: PreviousState,
         interval: int = BARS_POLL_INTERVAL) -> None:
-    """Периодически читает все таблицы,находит изменения и шлёт уведомления."""
+    """
+    Periodically monitors configured data sources for changes and sends notifications when updates are detected.
+    
+    This method continuously polls multiple data tables to detect modifications compared to the previous state. It maintains real-time synchronization between the data sources and notification system to ensure subscribers receive timely updates.
+    
+    Args:
+        session: HTTP client session for making API requests
+        send_func: Function responsible for delivering notifications
+        state: Object storing previous state data for change detection
+        interval: Polling interval in seconds (default: BARS_POLL_INTERVAL)
+    
+    Returns:
+        None
+    """
     try:
         init_db()
         print("БД инициализирована")
@@ -59,7 +72,23 @@ async def _check_sheet(
         send_func,
         subscriptions: Dict[str, int],
         state: PreviousState) -> None:
-    """Проверить одну таблицу на изменения."""
+    """
+    Check a single spreadsheet for changes and notify subscribed users.
+    
+    This method monitors a specific Google Sheet for modifications in tracked rows,
+    comparing current values with previous state to detect changes that require
+    notification.
+    
+    Args:
+        cfg: Configuration object containing sheet settings like table ID and columns to scan
+        session: HTTP client session for making API requests
+        send_func: Callback function for sending notifications
+        subscriptions: Dictionary mapping identifiers to chat IDs for notification routing
+        state: Previous state storage for change detection comparison
+    
+    Returns:
+        None
+    """
     rows = await asyncio.to_thread(get_sheet_rows, cfg)
     if rows is None:
         print(f"Не удалось прочитать {cfg['table_id']}")
@@ -101,7 +130,18 @@ async def _check_sheet(
 
 
 def _row_to_dict(row: List[str]) -> Dict[int, str]:
-    """Превратить список в словарь {col_idx: value}."""
+    """
+    Convert a list into a dictionary mapping column indices to values.
+    
+    Args:
+        row: A list of string values representing a row of data.
+    
+    Returns:
+        A dictionary where keys are column indices (integers) and values are the corresponding elements from the input list.
+    
+    Why:
+        This conversion enables efficient column-based access to row data by index, which is useful for spreadsheet operations where specific columns need to be referenced or processed individually.
+    """
     return {idx: val for idx, val in enumerate(row)}
 
 
@@ -114,7 +154,25 @@ async def _detect_and_notify(
         new_row: List[str],
         old_state: Dict[int, str],
         column_headers: Dict[int, str]) -> None:
-    """Найти изменения в строке и отправить уведомление."""
+    """
+    Detects changes in a spreadsheet row and sends notifications about updates.
+    
+    Compares the current row state with the previous state to identify modified values,
+    logs detected changes, and sends a formatted notification message if any changes are found.
+    
+    Args:
+        cfg: Configuration object containing table settings
+        session: HTTP client session for making requests
+        send_func: Function responsible for sending notifications
+        chat_id: Telegram chat identifier for the recipient
+        identifier: Unique identifier for the row being monitored
+        new_row: Current row data as a list of string values
+        old_state: Previous row state as a dictionary mapping column indices to values
+        column_headers: Dictionary mapping column indices to their header names
+    
+    Returns:
+        None
+    """
     new_state = _row_to_dict(new_row)
 
     changes: List[str] = []

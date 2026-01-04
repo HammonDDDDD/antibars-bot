@@ -11,7 +11,19 @@ _headers_cache: Dict[tuple, List[str]] = {}
 
 
 def get_sheet_rows(config: BarsSheetConfig) -> Optional[List[List[str]]]:
-    """Вернуть все строки листа или None при ошибке."""
+    """
+    Retrieve all rows from a Google Sheets worksheet.
+    
+    Args:
+        config: Configuration object containing spreadsheet ID and worksheet name.
+    
+    Returns:
+        List of lists containing all worksheet values if successful, None if an error occurs.
+    
+    This method handles authentication and API interactions with Google Sheets to fetch
+    complete worksheet data. It returns None on errors to allow calling code to handle
+    failures gracefully rather than raising exceptions.
+    """
     try:
         creds = Credentials.from_service_account_file(
             GOOGLE_SHEETS_CREDENTIALS_FILE,
@@ -29,8 +41,16 @@ def get_sheet_rows(config: BarsSheetConfig) -> Optional[List[List[str]]]:
 
 
 def get_column_headers(config: BarsSheetConfig) -> Dict[int, str]:
-    """ Получить заголовки столбцов из первой строки таблицы.
-    :returns: {col_idx: col_name}.
+    """
+    Extract column headers from the first row of a spreadsheet.
+    
+    This method retrieves column headers to establish a mapping between column indices and their corresponding names, enabling structured access to spreadsheet data. It implements caching to optimize performance by avoiding repeated API calls for the same spreadsheet.
+    
+    Args:
+        config: Configuration object containing spreadsheet_id and sheet_name identifiers.
+    
+    Returns:
+        Dictionary mapping column indices (int) to header names (str).
     """
     cache_key = (config["spreadsheet_id"], config["sheet_name"])
 
@@ -49,8 +69,21 @@ def get_column_headers(config: BarsSheetConfig) -> Dict[int, str]:
 
 def find_identifier_in_row(row: List[str],
                            columns_to_scan: int = 50) -> Optional[str]:
-    """ Ищет ИСУ или ФИО в первых N столбцах строки.
-    :returns: первое непустое значение либо None.
+    """
+    Searches for the first non-empty value in the first N columns of a row.
+    
+    This function is used to extract meaningful data from spreadsheet rows by skipping
+    empty cells and returning the first available value. It helps identify rows that
+    contain actual data entries rather than blank or placeholder values.
+    
+    Args:
+        row: A list of strings representing a row from a spreadsheet or tabular data.
+        columns_to_scan: The maximum number of columns to check from the beginning of the row.
+                        Defaults to 50 columns.
+    
+    Returns:
+        The first non-empty string value found in the specified columns, or None if 
+        all scanned columns are empty.
     """
     for col_idx in range(min(columns_to_scan, len(row))):
         val = row[col_idx].strip()

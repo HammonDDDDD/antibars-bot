@@ -34,6 +34,21 @@ GOOGLE_SHEETS_CREDENTIALS_FILE: Final[str] = "antibars-credentials.json"
 
 
 class BarsSheetConfig(TypedDict):
+    """
+    A configuration class for specifying spreadsheet settings for bar data extraction.
+    
+        Class Attributes:
+        - table_id: Identifier for the specific table within the spreadsheet.
+        - spreadsheet_id: Unique identifier for the Google Sheets spreadsheet.
+        - sheet_name: Name of the specific sheet within the spreadsheet.
+        - header_rows: Number of header rows to skip before data begins.
+        - columns_to_scan: Range of columns to extract data from.
+    
+        This class provides the necessary configuration parameters to locate and extract
+        bar data from a Google Sheets document, including spreadsheet identification,
+        sheet selection, and data range specifications.
+    """
+
     table_id: str  # Название таблицы
     spreadsheet_id: str  # Google Sheets ID
     sheet_name: str  # имя листа
