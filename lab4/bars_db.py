@@ -4,7 +4,18 @@ from lab4.constants import DATABASE_FILE
 
 
 def init_db() -> None:
-    """Инициализировать БД (создать таблицы, если их нет)."""
+    """
+    Initialize the database by creating necessary tables if they don't exist.
+    
+    This method ensures the database schema is properly set up to support 
+    the bot's notification and tracking functionality. It creates tables 
+    for managing user subscriptions and maintaining change history for 
+    debugging and monitoring purposes.
+    
+    Args: None
+    
+    Returns: None
+    """
     conn = sqlite3.connect(DATABASE_FILE)
     cursor = conn.cursor()
 
@@ -36,7 +47,20 @@ def init_db() -> None:
 
 
 def add_subscription(identifier: str, chat_id: int) -> bool:
-    """Добавить подписку (ИСУ/ФИО -> chat_id). Вернуть True если успешно."""
+    """
+    Add a subscription mapping an identifier to a chat_id.
+    
+    This method ensures that a specific identifier (which could represent a user or entity) 
+    is associated with a Telegram chat ID in the database. If an existing subscription 
+    for the identifier already exists, it will be replaced with the new chat_id.
+    
+    Args:
+        identifier (str): The identifier (e.g., user ID or name) to subscribe.
+        chat_id (int): The Telegram chat ID to associate with the identifier.
+    
+    Returns:
+        bool: True if the subscription was successfully added or updated, False otherwise.
+    """
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -54,7 +78,17 @@ def add_subscription(identifier: str, chat_id: int) -> bool:
 
 
 def get_chat_id(identifier: str) -> Optional[int]:
-    """Получить chat_id по ИСУ/ФИО."""
+    """
+    Retrieve the chat_id associated with a given identifier from the database.
+    
+    This method enables the bot to look up the Telegram chat ID for a specific user or entity identifier, which is essential for directing notifications and updates to the correct recipient.
+    
+    Args:
+        identifier (str): The unique identifier (e.g., ISU number or full name) used to look up the chat_id.
+    
+    Returns:
+        Optional[int]: The chat_id if found, otherwise None if no matching record exists or an error occurs.
+    """
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -70,7 +104,19 @@ def get_chat_id(identifier: str) -> Optional[int]:
 
 
 def get_all_subscriptions() -> Dict[str, int]:
-    """Получить всех подписчиков как {identifier: chat_id}."""
+    """
+    Retrieve all active subscriptions from the database as a mapping of identifiers to chat IDs.
+    
+    This method provides a complete view of currently subscribed users and their associated chat identifiers,
+    enabling the system to efficiently route notifications and updates to the appropriate Telegram chats.
+    
+    Args:
+        None
+    
+    Returns:
+        Dict[str, int]: A dictionary where keys are unique identifiers and values are Telegram chat IDs.
+                       Returns an empty dictionary if an error occurs or no subscriptions exist.
+    """
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
@@ -89,7 +135,23 @@ def log_change(
         column_name: str,
         old_value: str,
         new_value: str) -> None:
-    """Логировать изменение для отладки."""
+    """
+    Logs a change to the database for tracking and debugging purposes.
+    
+    This method records changes made to specific columns in database tables,
+    creating an audit trail that can be used for debugging, monitoring data modifications,
+    and maintaining data integrity.
+    
+    Args:
+        table_id: The identifier of the table where the change occurred
+        identifier: The unique identifier of the record that was modified
+        column_name: The name of the column that was changed
+        old_value: The previous value of the column before modification
+        new_value: The new value of the column after modification
+    
+    Returns:
+        None
+    """
     try:
         conn = sqlite3.connect(DATABASE_FILE)
         cursor = conn.cursor()
